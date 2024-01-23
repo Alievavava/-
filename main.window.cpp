@@ -1,183 +1,230 @@
 #include "mainwindow.h"
-#include <QPainter>
+#include "ticket.h"
+#include "ui_mainwindow.h"
 #include <QFileDialog>
-#include <QGraphicsLineItem>
-#include <QtMath>
-#include <QGraphicsPixmapItem>
-#include <QMovie>
-#include <QMessageBox>
-#include <QPushButton>
-#include <QApplication>
 
-SignalGenerator::SignalGenerator(QWidget *parent) : QWidget(parent) {
-
-    this->setMinimumSize(800, 600); // Установка минимального размера окна
-    signalGenerated = false;
-    frequencyLabel = new QLabel("Частота:"); // Создание метки и поля ввода для частоты
-    frequencySpinBox = new QDoubleSpinBox;
-    frequencySpinBox->setRange(0.1, 1000.0);
-    frequencySpinBox->setValue(1.0);
-    frequencySpinBox->setFixedWidth(80);// Установка фиксированной ширины кнопки
-
-    amplitudeLabel = new QLabel("Амплитуда:"); // Создание метки и поля ввода для амплитуды
-    amplitudeSpinBox = new QDoubleSpinBox;
-    amplitudeSpinBox->setRange(0.1, 100.0);
-    amplitudeSpinBox->setValue(1.0);
-    amplitudeSpinBox->setFixedWidth(80);
-
-    phaseLabel = new QLabel("Сдвиг фазы:"); // Создание метки и поля ввода для сдвига фазы
-    phaseSpinBox = new QDoubleSpinBox;
-    phaseSpinBox->setRange(0.0, 360.0);
-    phaseSpinBox->setValue(0.0);
-    phaseSpinBox->setFixedWidth(80);
-
-    generateButton = new QPushButton("Генерация сигнала"); // Создание кнопок "Генерация сигнала" и "Сохранить сигнал" и установка соответствующих соединений с функциями
-    connect(generateButton, &QPushButton::clicked, this, &SignalGenerator::generateSignal);
-    generateButton->setFixedWidth(120);
-
-    saveButton = new QPushButton("Сохранить сигнал");
-    connect(saveButton, &QPushButton::clicked, this, &SignalGenerator::saveSignal);
-    saveButton->setFixedWidth(120);// Установка фиксированной ширины кнопки
-
-    QVBoxLayout *layout = new QVBoxLayout; // Создание вертикального компоновщика и добавление виджетов в окно
-    layout->addWidget(frequencyLabel);
-    layout->addWidget(frequencySpinBox);
-    layout->addWidget(amplitudeLabel);
-    layout->addWidget(amplitudeSpinBox);
-    layout->addWidget(phaseLabel);
-    layout->addWidget(phaseSpinBox);
-    layout->addWidget(generateButton);
-    layout->addWidget(saveButton);
-
-    graphicsView = new QGraphicsView; // Создание элементов для вывода графика
-    graphicsScene = new QGraphicsScene;
-    graphicsView->setScene(graphicsScene);
-
-    graphicsScene->setBackgroundBrush(QBrush(QColor("#f4fcf2"))); // Настройка цветов для элементов интерфейса
-    QString spinBoxStyle = "QDoubleSpinBox { background-color: #f4fcf2 }";
-    frequencySpinBox->setStyleSheet(spinBoxStyle);
-    amplitudeSpinBox->setStyleSheet(spinBoxStyle);
-    phaseSpinBox->setStyleSheet(spinBoxStyle);
-
-    layout->addWidget(graphicsView);
-
-    gifItem = new QGraphicsPixmapItem;// Создание элемента графической сцены для гифки
-    graphicsScene->addItem(gifItem);
-
-    movie = new QMovie(":/images/1.gif");// Загрузка анимированный GIF
-    gifItem->setPixmap(movie->currentPixmap());
-
-    movie->start();// Начало анимации и установка таймера для обновления кадров
-    connect(movie, &QMovie::frameChanged, this, &SignalGenerator::updateGifFrame);
-
-    setLayout(layout);
-    setWindowTitle("Signal Generator");
-
-    exitButton = new QPushButton("Выход");  // Создание кнопки "Выход"
-    connect(exitButton, &QPushButton::clicked, this, &SignalGenerator::exitApplication);
-    exitButton->setFixedWidth(120);
-    layout->addWidget(exitButton);  // Добавление кнопки "Выход" в компоновщик
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    form_2 = new Form_ticket();
+    connect( this, &MainWindow::signal_to_ticket, form_2, &Form_ticket::slot_from_mainwindow );
 }
 
-void SignalGenerator::updateGifFrame(int frameNumber) {
-    gifItem->setPixmap(movie->currentPixmap());
+MainWindow::~MainWindow()
+{
+    delete ui;
 }
 
-void SignalGenerator::generateSignal() {
+bool MainWindow::check_all(QString surname, QString name, QString patronymic, QString tel_number, QString pas_num, QString snils, QString num_polis)
+{
+    for(QChar item : surname){
+        if(item.isDigit()) {
+            QMessageBox::critical(this,"Ошибка", "В строке Фамилия присутствуют цифра");
+            return false;
+        }
+     }
+    for(QChar item : name){
+        if(item.isDigit()) {
+            QMessageBox::critical(this,"Ошибка", "В строке Имя присутвует цифра");
+            return false;
+        }
+    }
+    for(QChar item : patronymic){
+        if(item.isDigit()){
+            QMessageBox::critical(this,"Ошибка", "В строке Отчество присутвует цифра");
+            return false;
+        }
+    }
+    for(QChar item : tel_number){
+        if(!item.isDigit()){
+            QMessageBox::critical(this, "Ошибка", "В строке контактный телефон присувует буква");
+            return false;
+        }
+    }
+    for(QChar item : pas_num){
+
+            if(!item.isDigit() ){
+            QMessageBox::critical(this, "Ошибка", "В строке паспортные данные присувует буква");
+            return false;
+        }
+    }
+
+    for(QChar item : snils){
+
+            if(!item.isDigit()){
+            QMessageBox::critical(this, "Ошибка", "В строке снилс присувует буква");
+            return false;
+        }
+    }
+    for(QChar item : num_polis){
+        if(!item.isDigit()){
+            QMessageBox::critical(this, "Ошибка", "В строке номере страхового полюса присувует буква");
+            return false;
+        }
+    }
+    if(surname.isEmpty()){
+    QMessageBox::critical(this, "Ошибка", "Заполните фаимлию");
+    return false;
+    } else if(name.isEmpty()){
+    QMessageBox::critical(this, "Ошибка", "Заполните имя");
+    return false;
+    } else  if(pas_num.isEmpty()){
+    QMessageBox::critical(this, "Ошибка", "Заполните поле паспортные данные ");
+    return false;
+    }  else if(snils.isEmpty()){
+    QMessageBox::critical(this, "Ошибка", "Заполните поле снилс");
+    return false;
+    } else if(num_polis.isEmpty()){
+    QMessageBox::critical(this, "Ошибка", "Заполните поле полюс");
+    return false;
+    } else if(tel_number.isEmpty()){
+    QMessageBox::critical(this, "Ошибка", "Заполните поле контактный телефон");
+    return
+            false;
+    }
+
+    else
+    {
+        return true;
+    }
 
 
-    graphicsScene->setBackgroundBrush(QBrush(QColor("#f4fcf2"))); // Очистка сцены и установка фона
-    graphicsScene->clear();
+}
+std::vector <Ticket> vec_ticket;
 
-    const double frequency = frequencySpinBox->value();
-    const double amplitude = amplitudeSpinBox->value();
-    const double phaseShift = phaseSpinBox->value();
 
-    if (frequency >= 100.0 || amplitude >= 100.0 || phaseShift >= 100.0) {// Отображение сообщения об ошибке
-        QMessageBox::critical(this, "Ошибка", "Одно из значений больше 100. Пожалуйста, введите значения до 100.");
+void MainWindow::on_pushButton_zapisatsa_clicked()
+{
+    QTime time = ui->timeEdit_clock->time();
+     QString surname = ui->lineEdit_surname->text();
+     QString name = ui->lineEdit_name->text();
+     QString patronymic = ui->lineEdit_patronomic->text();
+     QDate date_birth = ui->dateEdit_date_of_birth->date();
+     QString tel_number = ui->lineEdit_telefon->text();
+     QString pas_num = ui->lineEdit_passport->text();
+     QString snils = ui->lineEdit_snils->text();
+     QString num_polis = ui->lineEdit_srax_polus->text();
+     QString doctor = ui->comboBox_doctor->currentText();
+     bool sex;
+     QDate date = ui->dateEdit_date_recording->date();
+
+     if(check_all(surname,  name, patronymic, tel_number,  pas_num,  snils,  num_polis) == false){
+         return;
+     }
+
+
+    if(!ui->checkBox_agreement->isChecked()){
+        QMessageBox::critical(this, "Ошибка", "Поставьте галочку согласие");
         return;
-        signalGenerated = false;
     }
 
-    QList<QGraphicsItem*> items = graphicsScene->items(); // Удаление предыдущих линий перед созданием новых
-    for (QGraphicsItem* item : items) {
-        if (item->type() == QGraphicsLineItem::Type || item->type() == QGraphicsTextItem::Type) {
-            graphicsScene->removeItem(item);
-            delete item;
-        }
+    if(ui->checkBox_male->isChecked() && ui->checkBox_female->isChecked())
+    {
+        QMessageBox::critical(this, "Ошибка", "Введен некоректный пол");
+        return;
+    }  else if(ui->checkBox_male->isChecked()){
+        sex = true;// мужчина
+    } else if (ui->checkBox_female){
+        sex = false;// женщина
     }
 
 
+    Ticket ticket = Ticket(time, surname, name, patronymic,date_birth, tel_number, pas_num, snils, num_polis, doctor,sex, date);
 
-    QPen xAxisPen(QColor(57, 130, 57)); // Ось X
-    xAxisPen.setWidth(4);
-    QGraphicsLineItem *xAxis = new QGraphicsLineItem(0, 0, graphicsView->width(), 0);
-    xAxis->setPen(xAxisPen);
-    graphicsScene->addItem(xAxis);
-
-    // Ось Y
-           QPen yAxisPen(QColor(57, 130, 57)); // фиолетовый цвет
-               yAxisPen.setWidth(4);
-               QGraphicsLineItem *yAxis = new QGraphicsLineItem(0, -graphicsView->height() * 0.5,
-                                                                0, graphicsView->height() * 0.5);
-               yAxis->setPen(yAxisPen);
-               graphicsScene->addItem(yAxis);
-
-    QPen graphPen(QColor(187, 0, 255)); // Создание пера для рисования графика
-    graphPen.setWidth(6);
-
-    const int numPoints = 1000; //Создание и добавление графика на графическую сцену
-
-    for (int i = 0; i < numPoints - 1; ++i) { //numPoints представляет собой количество точек на графике
-        double t1 = i / 1000.0; //t1 и t2 представляют временные значения для текущей и следующей точек
-        double t2 = (i + 1) / 1000.0;
-        double value1 = amplitudeSpinBox->value() * qSin(2 * M_PI * frequencySpinBox->value() * t1 + phaseSpinBox->value());
-        double value2 = amplitudeSpinBox->value() * qSin(2 * M_PI * frequencySpinBox->value() * t2 + phaseSpinBox->value()); //начения value1 и value2 представляют значения сигнала в моменты времени t1 и t2 вычисляются, используя синусоидальную функцию с учетом частоты, амплитуды и сдвига фазы.
-
-        QGraphicsLineItem *line = new QGraphicsLineItem(t1 * graphicsView->width(), -value1 * graphicsView->height() * 0.1, t2 * graphicsView->width(), -value2 * graphicsView->height() * 0.1);
-
-        line->setPen(graphPen);
-        graphicsScene->addItem(line); //Создается линейный сегмент между текущей и следующей точкой, устанавливается цвет пера (graphPen)
+    vec_ticket.push_back(ticket);
+    emit signal_to_ticket(ticket.id,time, surname, name, patronymic,date_birth, tel_number, pas_num, snils, num_polis, doctor,sex,date);
 
 
-        signalGenerated = true;
 
-        if ( fmod(t1, 0.25) == 0) {
-            QGraphicsTextItem *coordLabel = new QGraphicsTextItem(QString::number(t1, 'f', 2));
-            coordLabel->setPos(t1 * graphicsView->width(), 10);
-            graphicsScene->addItem(coordLabel);
-        }
- //       if ( fmod(t1, 0.25) == 0) {
- //           int integerValue = static_cast<int>(value1);
-  //          QGraphicsTextItem *coordLabel = new QGraphicsTextItem(QString::number(integerValue));
-  //          coordLabel->setPos(0, -value1 * graphicsView->height() * 0.1);
-   //         graphicsScene->addItem(coordLabel);
-   //     }
-        }
+        ui->lineEdit_surname->clear();
+        ui->lineEdit_name->clear();
+        ui->lineEdit_patronomic->clear();
+        ui->lineEdit_telefon->clear();
+        ui->lineEdit_passport->clear();
+        ui->lineEdit_snils->clear();
+        ui->lineEdit_srax_polus->clear();
+        ui->checkBox_female->setCheckState(Qt::Unchecked);
+        ui->checkBox_male->setCheckState(Qt::Unchecked);
+        ui->checkBox_agreement->setCheckState(Qt::Unchecked);
 
 }
 
-void SignalGenerator::saveSignal() {
-    if (!signalGenerated) { // Проверка, был ли сгенерирован сигнал
-           QMessageBox::critical(this, "Ошибка", "Сначала сгенерируйте сигнал!");
-           return;
-    }
+void MainWindow::on_action_triggered()// Меню -> Информация
+{
+    QMessageBox::information(this,"Информация", "Данная программа создана для записи к врачу. Программа может принимать файл с расширением .txt, который содержит данные для формы, после чего идет заполнение."
+                                                           " Также можно заполнить форму вручную."
+                                                           " Программа создана в учебных целях студентом 2 курса группы ИВТ-223 Королев Александр Дмитриевич."
+                                                           " Используйте с удовольствием.");
+}
 
-    const QString fileName = QFileDialog::getSaveFileName(this, "Save Signal Image", "", "Images (*.png *.jpg *.bmp)");
+void MainWindow::on_action_2_triggered()// Меню -> Выход
+{
+    QApplication::quit();
+}
 
-    if (!fileName.isEmpty()) {
-        QPixmap pixmap(graphicsView->width(), graphicsView->height()); // Создаем изображение
-        pixmap.fill(Qt::white); // Заполняем белым фоном
-        QPainter painter(&pixmap);// Создаем QPainter и рисуем на нем сцену
-        graphicsScene->render(&painter);
+void MainWindow::on_pb_fill_from_txt_clicked()
+{
+    // Открываем диалоговое окно для выбора текстового файла
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Выберите текстовый файл"), "", tr("Текстовые файлы (*.txt)"));
 
-        if (pixmap.save(fileName)) {// Сохраняем изображение
-            QMessageBox::information(this, "Отлично!", "Изображение сохранено!");
-        } else {
-            QMessageBox::critical(this, "Ошибка", "Не удалось сохранить изображение!");
+    // Проверяем, был ли выбран файл
+    if (!filePath.isEmpty()) {
+        QFile file(filePath);
+
+        // Проверяем, удалось ли открыть файл для чтения
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QTextStream in(&file);
+            QString line;
+            QStringList data;
+
+            // Читаем файл построчно и обрабатываем данные
+            while (!in.atEnd()) {
+                line = in.readLine();
+                data = line.split(":"); // Разбиваем строку по разделителю ':'
+
+                // Проверяем, содержит ли строка две части (поле и значение)
+                if (data.size() == 2) {
+                    QString field = data[0].trimmed(); // Получаем поле, удаляем лишние пробелы
+                    QString value = data[1].trimmed(); // Получаем значение, удаляем лишние пробелы
+
+                    // Заполняем соответствующие поля формы данными из файла
+                    if (field == "Фамилия")
+                        ui->lineEdit_surname->setText(value);
+                    else if (field == "Имя")
+                        ui->lineEdit_name->setText(value);
+                    else if (field == "Отчество")
+                        ui->lineEdit_patronomic->setText(value);
+                    else if (field == "Дата рождения")
+                        ui->dateEdit_date_of_birth->setDate(QDate::fromString(value, "dd.MM.yyyy"));
+                    else if (field == "Паспортные данные")
+                        ui->lineEdit_passport->setText(value);
+                    else if (field == "СНИЛС")
+                        ui->lineEdit_snils->setText(value);
+                    else if (field == "Номер страхового полиса")
+                        ui->lineEdit_srax_polus->setText(value);
+                    else if (field == "Контактный номер")
+                        ui->lineEdit_telefon->setText(value);
+                    else if (field == "Дата записи")
+                        ui->dateEdit_date_recording->setDate(QDate::fromString(value, "yyyy-MM-dd"));
+                    else if (field == "Пол") {
+                        // Устанавливаем флажок в зависимости от значения
+                        if (value == "М")
+                            ui->checkBox_male->setChecked(true);
+                        else if (value == "Ж")
+                            ui->checkBox_female->setChecked(true);
+                    }
+                } else if (data.size() == 4) {
+                    // Если строка содержит 4 части, устанавливаем значение времени (здесь просто пример)
+                    QString value = "123045";
+                    QTime time = QTime::fromString(value, "hhmmss");
+                    ui->timeEdit_clock->setTime(time);
+                }
+            }
+            // Закрываем файл после обработки
+            file.close();
         }
     }
 }
-void SignalGenerator::exitApplication() {
-    QApplication::quit();  // Завершение приложения
-}
+
